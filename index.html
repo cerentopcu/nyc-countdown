@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NYC Countdown</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #0a0a0a;
+      color: #ffffff;
+      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      overflow: hidden;
+    }
+
+    /* ── Page layout ── */
+    .page {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 2rem 1rem;
+    }
+
+    /* ── Skyline silhouette ── */
+    .skyline {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      opacity: 0.10;
+      pointer-events: none;
+    }
+
+    /* ── Top labels ── */
+    .city-label {
+      font-size: 12px;
+      letter-spacing: 0.35em;
+      color: #ff4500;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: #555;
+      text-transform: uppercase;
+      margin-bottom: 3rem;
+      text-align: center;
+    }
+
+    /* ── Main clock ── */
+    .clock-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 900px;
+      margin-bottom: 2rem;
+    }
+
+    .clock-section-label {
+      font-size: 9px;
+      letter-spacing: 0.35em;
+      color: #444;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .digits-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .digit-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .digit-value {
+      font-size: clamp(44px, 7vw, 88px);
+      line-height: 1;
+      min-width: 1.2ch;
+      text-align: center;
+      transition: color 0.4s ease;
+    }
+
+    .digit-unit {
+      font-size: clamp(8px, 1vw, 10px);
+      letter-spacing: 0.25em;
+      color: #444;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    .sep {
+      font-size: clamp(36px, 5.5vw, 72px);
+      color: #222;
+      padding: 0 6px;
+      margin-bottom: 16px;
+      user-select: none;
+    }
+
+    /* Climate-Clock-inspired colour progression */
+    #d-years  { color: #ff4500; }
+    #d-months { color: #ff6a00; }
+    #d-days   { color: #ffaa00; }
+    #d-hours  { color: #ffe000; }
+    #d-mins   { color: #c8ff00; }
+    #d-secs   { color: #00ff99; }
+
+    /* ── Progress bar ── */
+    .progress-wrap {
+      width: 100%;
+      max-width: 900px;
+      height: 5px;
+      background: #181818;
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 1.5rem 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff4500 0%, #ffaa00 50%, #00ff99 100%);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 1s linear;
+    }
+
+    /* ── Date row ── */
+    .dates-row {
+      display: flex;
+      gap: 3rem;
+      font-size: 10px;
+      color: #444;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .dates-row .value { color: #888; }
+
+    /* ── Footer ── */
+    .footer {
+      font-size: 10px;
+      color: #333;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-top: 2rem;
+    }
+
+    /* ── Pulse animation on seconds ── */
+    @keyframes pulse {
+      0%   { opacity: 1; }
+      50%  { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+    #d-secs { animation: pulse 1s step-end infinite; }
+
+    /* ── Responsive tweaks ── */
+    @media (max-width: 600px) {
+      .sep { display: none; }
+      .digits-row { gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NYC Skyline SVG background -->
+<svg class="skyline" viewBox="0 0 1400 220" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice">
+  <!-- Generated skyline silhouette blocks -->
+  <rect x="0"    y="120" width="28"  height="100" fill="#fff"/>
+  <rect x="30"   y="80"  width="18"  height="140" fill="#fff"/>
+  <rect x="50"   y="50"  width="30"  height="170" fill="#fff"/>
+  <rect x="82"   y="90"  width="20"  height="130" fill="#fff"/>
+  <rect x="104"  y="30"  width="14"  height="190" fill="#fff"/>
+  <rect x="120"  y="65"  width="32"  height="155" fill="#fff"/>
+  <rect x="154"  y="85"  width="22"  height="135" fill="#fff"/>
+  <rect x="178"  y="20"  width="18"  height="200" fill="#fff"/>
+  <rect x="198"  y="60"  width="26"  height="160" fill="#fff"/>
+  <rect x="226"  y="95"  width="16"  height="125" fill="#fff"/>
+  <rect x="244"  y="40"  width="36"  height="180" fill="#fff"/>
+  <rect x="282"  y="70"  width="14"  height="150" fill="#fff"/>
+  <rect x="298"  y="90"  width="24"  height="130" fill="#fff"/>
+  <rect x="324"  y="15"  width="10"  height="205" fill="#fff"/>
+  <rect x="336"  y="55"  width="20"  height="165" fill="#fff"/>
+  <rect x="358"  y="45"  width="30"  height="175" fill="#fff"/>
+  <rect x="390"  y="80"  width="16"  height="140" fill="#fff"/>
+  <rect x="408"  y="35"  width="24"  height="185" fill="#fff"/>
+  <rect x="434"  y="70"  width="18"  height="150" fill="#fff"/>
+  <rect x="454"  y="55"  width="28"  height="165" fill="#fff"/>
+  <rect x="484"  y="25"  width="12"  height="195" fill="#fff"/>
+  <rect x="498"  y="75"  width="22"  height="145" fill="#fff"/>
+  <rect x="522"  y="40"  width="32"  height="180" fill="#fff"/>
+  <rect x="556"  y="65"  width="16"  height="155" fill="#fff"/>
+  <rect x="574"  y="85"  width="26"  height="135" fill="#fff"/>
+  <rect x="602"  y="30"  width="14"  height="190" fill="#fff"/>
+  <rect x="618"  y="60"  width="20"  height="160" fill="#fff"/>
+  <rect x="640"  y="50"  width="28"  height="170" fill="#fff"/>
+  <rect x="670"  y="90"  width="16"  height="130" fill="#fff"/>
+  <rect x="688"  y="22"  width="12"  height="198" fill="#fff"/>
+  <rect x="702"  y="62"  width="24"  height="158" fill="#fff"/>
+  <rect x="728"  y="78"  width="18"  height="142" fill="#fff"/>
+  <rect x="748"  y="38"  width="30"  height="182" fill="#fff"/>
+  <rect x="780"  y="58"  width="14"  height="162" fill="#fff"/>
+  <rect x="796"  y="28"  width="22"  height="192" fill="#fff"/>
+  <rect x="820"  y="68"  width="26"  height="152" fill="#fff"/>
+  <rect x="848"  y="48"  width="20"  height="172" fill="#fff"/>
+  <rect x="870"  y="82"  width="16"  height="138" fill="#fff"/>
+  <rect x="888"  y="32"  width="28"  height="188" fill="#fff"/>
+  <rect x="918"  y="72"  width="12"  height="148" fill="#fff"/>
+  <rect x="932"  y="42"  width="34"  height="178" fill="#fff"/>
+  <rect x="968"  y="88"  width="18"  height="132" fill="#fff"/>
+  <rect x="988"  y="18"  width="14"  height="202" fill="#fff"/>
+  <rect x="1004" y="58"  width="22"  height="162" fill="#fff"/>
+  <rect x="1028" y="78"  width="30"  height="142" fill="#fff"/>
+  <rect x="1060" y="45"  width="16"  height="175" fill="#fff"/>
+  <rect x="1078" y="65"  width="24"  height="155" fill="#fff"/>
+  <rect x="1104" y="30"  width="20"  height="190" fill="#fff"/>
+  <rect x="1126" y="55"  width="28"  height="165" fill="#fff"/>
+  <rect x="1156" y="85"  width="14"  height="135" fill="#fff"/>
+  <rect x="1172" y="42"  width="26"  height="178" fill="#fff"/>
+  <rect x="1200" y="68"  width="18"  height="152" fill="#fff"/>
+  <rect x="1220" y="25"  width="32"  height="195" fill="#fff"/>
+  <rect x="1254" y="62"  width="16"  height="158" fill="#fff"/>
+  <rect x="1272" y="48"  width="24"  height="172" fill="#fff"/>
+  <rect x="1298" y="82"  width="20"  height="138" fill="#fff"/>
+  <rect x="1320" y="35"  width="28"  height="185" fill="#fff"/>
+  <rect x="1350" y="72"  width="16"  height="148" fill="#fff"/>
+  <rect x="1368" y="55"  width="32"  height="165" fill="#fff"/>
+</svg>
+
+<div class="page">
+  <div class="city-label">New York City</div>
+  <div class="subtitle">Time remaining in the city that never sleeps</div>
+
+  <div class="clock-wrap">
+    <div class="clock-section-label">your nyc chapter ends in</div>
+    <div class="digits-row">
+      <div class="digit-group">
+        <div class="digit-value" id="d-years">--</div>
+        <div class="digit-unit">years</div>
+      </div>
+      <div class="sep">:</div>
+      <div class="digit-group">
+        <div class="digit-value" id="d-months">--</div>
+        <div class="digit-unit">months</div>
+      </div>
+      <div class="sep">:</div>
+      <div class="digit-group">
+        <div class="digit-value" id="d-days">--</div>
+        <div class="digit-unit">days</div>
+      </div>
+      <div class="sep">:</div>
+      <div class="digit-group">
+        <div class="digit-value" id="d-hours">--</div>
+        <div class="digit-unit">hours</div>
+      </div>
+      <div class="sep">:</div>
+      <div class="digit-group">
+        <div class="digit-value" id="d-mins">--</div>
+        <div class="digit-unit">mins</div>
+      </div>
+      <div class="sep">:</div>
+      <div class="digit-group">
+        <div class="digit-value" id="d-secs">--</div>
+        <div class="digit-unit">secs</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <div class="dates-row">
+    <span>Arrived &nbsp;<span class="value">24 Jul 2024</span></span>
+    <span>Leaving &nbsp;<span class="value">24 Jul 2027</span></span>
+  </div>
+
+  <div class="footer" id="footerMsg">calculating...</div>
+</div>
+
+<script>
+  const START = new Date('2024-07-24T00:00:00');
+  const END   = new Date('2027-07-24T00:00:00');
+  const TOTAL = END - START;
+
+  function pad(n, w) {
+    return String(Math.max(0, Math.floor(n))).padStart(w, '0');
+  }
+
+  function tick() {
+    const now  = new Date();
+    const diff = Math.max(0, END - now);
+
+    // Progress
+    const pct = Math.min(100, ((now - START) / TOTAL) * 100);
+    document.getElementById('progressFill').style.width = pct.toFixed(3) + '%';
+
+    // Decompose years + months remaining (calendar-aware)
+    const eY = END.getFullYear(), eM = END.getMonth(), eD = END.getDate();
+    const nY = now.getFullYear(), nM = now.getMonth(),  nDy = now.getDate();
+
+    let years  = eY - nY;
+    let months = eM - nM;
+    if (months < 0) { years--; months += 12; }
+    if (eD < nDy)   { months--; if (months < 0) { years--; months += 11; } }
+
+    // Remaining seconds → days/hours/mins/secs
+    let rem = Math.floor(diff / 1000);
+    const secs  = rem % 60; rem = Math.floor(rem / 60);
+    const mins  = rem % 60; rem = Math.floor(rem / 60);
+    const hours = rem % 24; rem = Math.floor(rem / 24);
+
+    // Days within current month chunk
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const days = rem % daysInMonth;
+
+    document.getElementById('d-years').textContent  = pad(years,  1);
+    document.getElementById('d-months').textContent = pad(months, 2);
+    document.getElementById('d-days').textContent   = pad(days,   2);
+    document.getElementById('d-hours').textContent  = pad(hours,  2);
+    document.getElementById('d-mins').textContent   = pad(mins,   2);
+    document.getElementById('d-secs').textContent   = pad(secs,   2);
+
+    document.getElementById('footerMsg').textContent =
+      pct.toFixed(1) + '% of your NYC chapter complete  ·  ' +
+      Math.ceil(diff / 86400000) + ' total days left';
+  }
+
+  tick();
+  setInterval(tick, 1000);
+</script>
+</body>
+</html>
